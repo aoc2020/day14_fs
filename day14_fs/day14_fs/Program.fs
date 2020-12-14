@@ -29,8 +29,5 @@ let main argv =
     let program2 = unsafeLoad "input2.txt"
     let program3 = unsafeLoad "input3.txt"
     
-    printfn "%A" program2
-    task1 program2
-    
-//    task2 program3 
+    task2 program3 
     0 // return an integer exit code

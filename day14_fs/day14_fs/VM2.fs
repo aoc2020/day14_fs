@@ -1,6 +1,7 @@
 module day14_fs.VM2
 
 open System
+open day14_fs.FuzzyAddress
 open day14_fs.FuzzyMemory
 open day14_fs.Instructions
 
@@ -14,30 +15,29 @@ let fromBinary (value:String):int64 =
     let bits = value.ToCharArray() |> Seq.map charToInt |> Seq.toArray 
     let z = bits |> Seq.fold (fun acc v -> (acc * 2L) + v) 0L
     z
-
-type Mask (value:String) as self =
-    let xTo (target:char) (c:char)=
-        match c with
-        | 'X' -> target
-        | v -> v
-    let xToZero = xTo '0'
-    let xToOne = xTo '1'
-    let ones : String = value.ToCharArray () |> Seq.map xToZero |> Seq.toArray |> String 
-    let zeroes : String = value.ToCharArray () |> Seq.map xToOne |> Seq.toArray |> String           
-    member this.toString = sprintf "#%s" value
-    member this.getOnes = ones |> fromBinary
-    member this.getZeroes = zeroes |> fromBinary
+  
+type Op =
+    | FuzzyStore of FuzzyAddress*uint64
+    | Noop
     
-type VM (memory:FMemory, mask: Mask) as self =
-    new() = VM (FMemory (), Mask "0")
+type VM (memory:FMemory) as self =
+    new() = VM (FMemory ())
     member this.memory = memory 
-    member this.exec (inst:Instruction) : VM =
-        match inst with 
-        | Mask mask -> VM (memory, Mask mask)
-        | Mem (address,value) ->
-            VM (memory,mask)
     override this.ToString () = sprintf "VM(%A)" memory
 
-let execute (program: Instruction[]) : VM =
+let compile (program:Instruction[]):Op[] =
+    let compileInstruction (mask:FuzzyMask) (instruction:Instruction) : Op*FuzzyMask = 
+        match instruction with
+            | Mask newMask -> (Noop,FuzzyMask newMask)
+            | Mem (address,value) ->
+                let maskedAddress = FuzzyAddress address |> mask.applyTo
+                let fuzzyStore = FuzzyStore (maskedAddress,value)
+                (fuzzyStore,mask)
+    program |> Seq.mapFold compileInstruction (FuzzyMask ()) |> fst |> Seq.toArray   
+
+let execute (source: Instruction[]) : VM =
     let vm = VM ()
-    program |> Seq.fold (fun (vm:VM) -> vm.exec) vm
+    let program = compile source
+    printfn "Compiled: %A" program 
+//    program |> Seq.fold (fun (vm:VM) -> vm.exec) vm
+    vm 
