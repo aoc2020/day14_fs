@@ -1,6 +1,7 @@
 module day14_fs.VM2
 
 open System
+open day14_fs.FuzzyMemory
 open day14_fs.Instructions
 
 let fromBinary (value:String):int64 =
@@ -27,22 +28,14 @@ type Mask (value:String) as self =
     member this.getOnes = ones |> fromBinary
     member this.getZeroes = zeroes |> fromBinary
     
-type VM (memory:Map<int64,int64>, mask: Mask) as self =
-    new() = VM (Map.empty, Mask "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+type VM (memory:FMemory, mask: Mask) as self =
+    new() = VM (FMemory (), Mask "0")
     member this.memory = memory 
     member this.exec (inst:Instruction) : VM =
         match inst with 
         | Mask mask -> VM (memory, Mask mask)
         | Mem (address,value) ->
-            let value = value
-            let zeroes = mask.getZeroes            
-            let ones = mask.getOnes
-//            printfn "ONES: %A" ones 
-//            printfn "ZEROES: %A" zeroes
-            let newValue = (value ||| ones) &&& zeroes
-            printfn "VAL %d -> %d" value newValue
-            let newMem = memory.Add(address, newValue)
-            VM (newMem,mask)
+            VM (memory,mask)
     override this.ToString () = sprintf "VM(%A)" memory
 
 let execute (program: Instruction[]) : VM =

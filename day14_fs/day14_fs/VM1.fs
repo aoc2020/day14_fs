@@ -1,18 +1,9 @@
 module day14_fs.VM1
 
 open System
+open Binary 
 open day14_fs.Instructions
 
-let fromBinary (value:String):int64 =
-    printfn "fromBinary %s" value 
-    let charToInt (c:char) : int64 =
-        match c with
-        |'0' -> 0L
-        |'1' -> 1L
-        | _ -> -9999L
-    let bits = value.ToCharArray() |> Seq.map charToInt |> Seq.toArray 
-    let z = bits |> Seq.fold (fun acc v -> (acc * 2L) + v) 0L
-    z
 
 type Mask (value:String) as self =
     let xTo (target:char) (c:char)=
@@ -24,10 +15,10 @@ type Mask (value:String) as self =
     let ones : String = value.ToCharArray () |> Seq.map xToZero |> Seq.toArray |> String 
     let zeroes : String = value.ToCharArray () |> Seq.map xToOne |> Seq.toArray |> String           
     member this.toString = sprintf "#%s" value
-    member this.getOnes = ones |> fromBinary
-    member this.getZeroes = zeroes |> fromBinary
+    member this.getOnes = ones |> fromBinary |> Option.get
+    member this.getZeroes = zeroes |> fromBinary |> Option.get
     
-type VM (memory:Map<int64,int64>, mask: Mask) as self =
+type VM (memory:Map<uint64,uint64>, mask: Mask) as self =
     new() = VM (Map.empty, Mask "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
     member this.memory = memory 
     member this.exec (inst:Instruction) : VM =

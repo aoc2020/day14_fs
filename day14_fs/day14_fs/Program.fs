@@ -5,10 +5,9 @@ open day14_fs
 open day14_fs.Instructions
 
 let task2 (program:Instruction[]) =
-    let vm = VM2.VM()
-    let result = program |> Seq.fold (fun (vm:VM2.VM) -> vm.exec) vm
-    let answer = result.memory |> Map.toSeq |> Seq.map snd |> Seq.sum
-    printfn "RESULT: %A = %A" result answer  
+    let vm = VM2.execute program 
+    // let answer = vm.memory |> Map.toSeq |> Seq.map snd |> Seq.sum
+    printfn "RESULT: %A = %A" vm 42L  
   
 let task1 (program:Instruction[]) =
     let vm = VM1.execute program 
@@ -30,7 +29,8 @@ let main argv =
     let program2 = unsafeLoad "input2.txt"
     let program3 = unsafeLoad "input3.txt"
     
-    task1 program2 
+    printfn "%A" program2
+    task1 program2
     
 //    task2 program3 
     0 // return an integer exit code
