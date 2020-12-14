@@ -42,7 +42,7 @@ let execute (source: Instruction[]) : VM =
     let emptyVM = VM ()
     let program = compile source
     let vm = program |> Seq.fold (fun (vm:VM) (op:Op) -> vm.exec op) emptyVM
-    printfn "Compiled: %A" program
+//    printfn "Compiled: %A" program
     printfn "VM = %A" vm 
 //    program |> Seq.fold (fun (vm:VM) -> vm.exec) vm
     vm 
