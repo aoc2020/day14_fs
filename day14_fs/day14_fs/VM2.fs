@@ -16,14 +16,17 @@ let fromBinary (value:String):int64 =
     let z = bits |> Seq.fold (fun acc v -> (acc * 2L) + v) 0L
     z
   
-type Op =
-    | FuzzyStore of FuzzyAddress*uint64
-    | Noop
+
     
 type VM (memory:FMemory) as self =
-    new() = VM (FMemory ())
-    member this.memory = memory 
     override this.ToString () = sprintf "VM(%A)" memory
+    new() = VM (FMemory ())
+    member this.Memory = memory 
+    member this.exec (op:Op) : VM =
+        match op with
+        | Noop -> self
+        | FuzzyStore _ -> VM(memory.add op) 
+        
 
 let compile (program:Instruction[]):Op[] =
     let compileInstruction (mask:FuzzyMask) (instruction:Instruction) : Op*FuzzyMask = 
@@ -36,8 +39,10 @@ let compile (program:Instruction[]):Op[] =
     program |> Seq.mapFold compileInstruction (FuzzyMask ()) |> fst |> Seq.toArray   
 
 let execute (source: Instruction[]) : VM =
-    let vm = VM ()
+    let emptyVM = VM ()
     let program = compile source
-    printfn "Compiled: %A" program 
+    let vm = program |> Seq.fold (fun (vm:VM) (op:Op) -> vm.exec op) emptyVM
+    printfn "Compiled: %A" program
+    printfn "VM = %A" vm 
 //    program |> Seq.fold (fun (vm:VM) -> vm.exec) vm
     vm 

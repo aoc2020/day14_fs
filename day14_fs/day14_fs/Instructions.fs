@@ -1,11 +1,16 @@
 module day14_fs.Instructions
 
 open System
+open day14_fs.FuzzyAddress
 
 type Instruction =
     | Mem of uint64*uint64
     | Mask of String 
 
+type Op =
+    | FuzzyStore of FuzzyAddress*uint64
+    | Noop
+    
 let parseInstruction (s:String) : Option<Instruction> =
     match s with
     | _ when s.Contains("mask =") -> 
@@ -27,4 +32,5 @@ let parseProgram (input:seq<string>): Option<Instruction[]> =
     if inst |> Seq.contains None then
         None
     else
-        inst |> Seq.map Option.get |> Seq.toArray |> Some  
+        inst |> Seq.map Option.get |> Seq.toArray |> Some
+  
