@@ -25,13 +25,30 @@ type VM (memory:FMemory) as self =
         | Noop -> self
         | FuzzyStore _ -> VM(memory.add op)
     member this.optimizeAtBit (bit:int) =
+        let size1 = memory.Mem.Length
         let step1 = memory.removeShadowed ()
+        let size2 = step1.Mem.Length 
         let step2 = step1.checkConflicts ()
+        let size3 = step2.Mem.Length 
         let step3 = step2.moveDistinct ()
-        let step4 = step3.expandAtBit 0
+        let size4 = step3.Mem.Length 
+        let step4 = step3.expandAtBit bit
+        printfn "OPTIMIZE(%d): SHADOW: rm %d -> %d dist: mv %d -> %d" bit (size1-size2) size2 (size3-size4) size4 
         VM (step4)       
     member this.optimize () =
-        this.optimizeAtBit 0
+        let optimize (vm:VM) (bit:int) = vm.optimizeAtBit bit 
+        let optimizedVM = [0..36] |> Seq.fold optimize self
+        optimizedVM
+//        let step1 = this.optimizeAtBit 0
+//        let step2 = step1.optimizeAtBit 1
+//        let step3 = step2.optimizeAtBit 2
+//        let step4 = step3.optimizeAtBit 3
+//        let step5 = step4.optimizeAtBit 4
+//        let step6 = step5.optimizeAtBit 5
+//        let step7 = step6.optimizeAtBit 6
+//        let step8 = step7.optimizeAtBit 7
+//        let step9 = step8.optimizeAtBit 8
+//        step9
 
 let compile (program:Instruction[]):Op[] =
     let compileInstruction (mask:FuzzyMask) (instruction:Instruction) : Op*FuzzyMask = 
