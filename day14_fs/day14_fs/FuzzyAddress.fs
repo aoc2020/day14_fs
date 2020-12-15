@@ -8,7 +8,26 @@ module day14_fs.FuzzyAddress
             let value = num |> Binary.toPaddedBinary
             FuzzyAddress (value)
         member this.Value = addr
-        member this.chars () = addr.ToCharArray () 
+        member this.chars () = addr.ToCharArray ()
+        
+        member this.expandAtBit (bit:int) : FuzzyAddress[] =
+            let c = addr.[bit]
+            if c = 'X' then
+                printfn "Address: %A should be expanded at bit %d" self bit
+                let pre = addr.[0..bit-1]
+                let c = addr.[bit]
+                let post = addr.[bit+1..]
+                printfn "Parts %A %A %A" pre c post
+                let alt0 = sprintf "%s%s%s" pre "0" post 
+                let alt1 = sprintf "%s%s%s" pre "1" post 
+                printfn "Alternatives:"
+                printfn "  %s:" addr
+                printfn "  %s" alt0
+                printfn "  %s" alt1
+                [|FuzzyAddress(alt0);FuzzyAddress(alt1)|]
+            else
+                printfn "Address: %A is untouched" self
+                [|self|]
 
     type FuzzyMask (mask: String) as self =
         override this.ToString () = sprintf "#%s" mask

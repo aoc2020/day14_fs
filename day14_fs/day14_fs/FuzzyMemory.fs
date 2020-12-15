@@ -16,9 +16,9 @@ module day14_fs.FuzzyMemory
         member this.Distinct = distinct
         member this.Value = value
         member this.Address = address
-        member this.asPure () = MemArea(address, true, value)
-        member this.asDirty () = MemArea(address, false, value)
-        member this.withPurity (purity:bool) = MemArea(address, purity, value)
+        member this.asDistinct () = MemArea(address, true, value)
+        member this.asConflicting () = MemArea(address, false, value)
+        member this.withDistinct (purity:bool) = MemArea(address, purity, value)
         member this.intersectsWith (addr:FuzzyAddress) = FuzzyAddress.intersects addr address
         member this.intersectsWith (mem:MemArea) = FuzzyAddress.intersects mem.Address address
         member this.modifyDistinct (newDist:bool) = MemArea(address,distinct && newDist,value)
@@ -52,28 +52,30 @@ module day14_fs.FuzzyMemory
         let memList = mem |> List.ofSeq
         split memList addr |> Seq.toArray        
     
-    type FMemory (mem: MemArea[]) as self =
+    type FMemory (mem: MemArea[],distinctMem:MemArea[]) as self =
         override this.ToString () =
             let line1 = sprintf "  FuzzyMemory:\n"
             let lines = mem |> Seq.map (sprintf "    %A") |> String.concat "\n"
             sprintf "%s%s" line1 lines 
-        new () = FMemory ([||])
+        new () = FMemory ([||],[||])
         
-        member this.Mem = mem 
+        member this.Mem = mem
+        member this.DistinctMem = distinctMem
        
         member this.addUnchecked (memArea:MemArea) : FMemory =
             let newMem = Seq.append mem [memArea] |> Seq.toArray 
-            FMemory (newMem)
+            FMemory (newMem,distinctMem)
             
         member this.addUnchecked (memAreas:MemArea[]) : FMemory =
             let newMem = Seq.append mem memAreas |> Seq.toArray
-            FMemory (newMem)
+            FMemory (newMem,distinctMem)
 
         member this.splitMemoryBy (addr:FuzzyAddress) : FMemory =
             let split (area:MemArea) =
                 let addresses = splitIntersecting addr area.Address
                 addresses |> Seq.map (fun addr -> MemArea(addr,area.Distinct,area.Value))
-            mem |> Seq.map split |> Seq.concat |> Seq.toArray |> (FMemory)
+            let newMem = mem |> Seq.map split |> Seq.concat |> Seq.toArray
+            FMemory (newMem,distinctMem)
             
         member this.splitByMemory (addr:FuzzyAddress) : FuzzyAddress[] =
             splitShallowByMultipleAddresses mem addr
@@ -98,7 +100,7 @@ module day14_fs.FuzzyMemory
                         a :: filteredTail
                 | [] -> []
             let newMem = filterShadowed stack |> Seq.toArray
-            FMemory(newMem)
+            FMemory(newMem,distinctMem)
             
         member this.checkConflicts () : FMemory =            
             let conflictsWith (a1:int*MemArea) (a2:int*MemArea):bool =
@@ -111,8 +113,20 @@ module day14_fs.FuzzyMemory
             let isDistinct (others:(int*MemArea)[]) (a1:int*MemArea) : bool =
                 others |> Seq.filter (conflictsWith a1) |> Seq.isEmpty             
             let pairToMarked (a1:int*MemArea) (distinct:bool) =
-                (snd a1).withPurity distinct 
+                (snd a1).withDistinct distinct 
             let indexed = mem |> Seq.mapi (fun i area -> (i,area)) |> Seq.toArray 
             let newMem = indexed |> Seq.map (fun a1 -> pairToMarked a1 (isDistinct indexed a1)) |> Seq.toArray
-            FMemory(newMem) 
+            FMemory(newMem,distinctMem)
+        
+        member this.moveDistinct () : FMemory =
+            let distinctFromImpure = mem |> Seq.filter (fun (m:MemArea) -> m.Distinct)
+            let impure = mem |> Seq.filter (fun (m:MemArea) -> m.Distinct |> not) |> Seq.toArray 
+            let newDistinct = Seq.append distinctMem distinctFromImpure |> Seq.toArray
+            FMemory (impure,newDistinct)
+            
+        member this.expandAtBit (bit:int) : FMemory =
+            let expand (m:MemArea) = m.Address.expandAtBit bit 
+            let expanded = mem |> Seq.map (expand) |> Seq.toArray
+            self 
+
               

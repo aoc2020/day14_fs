@@ -27,7 +27,9 @@ type VM (memory:FMemory) as self =
     member this.optimize () =
         let step1 = memory.removeShadowed ()
         let step2 = step1.checkConflicts ()
-        VM (step2)       
+        let step3 = step2.moveDistinct ()
+        let step4 = step3.expandAtBit 0
+        VM (step3)       
 
 let compile (program:Instruction[]):Op[] =
     let compileInstruction (mask:FuzzyMask) (instruction:Instruction) : Op*FuzzyMask = 
