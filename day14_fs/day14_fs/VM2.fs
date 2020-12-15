@@ -24,12 +24,14 @@ type VM (memory:FMemory) as self =
         match op with
         | Noop -> self
         | FuzzyStore _ -> VM(memory.add op)
-    member this.optimize () =
+    member this.optimizeAtBit (bit:int) =
         let step1 = memory.removeShadowed ()
         let step2 = step1.checkConflicts ()
         let step3 = step2.moveDistinct ()
         let step4 = step3.expandAtBit 0
-        VM (step3)       
+        VM (step4)       
+    member this.optimize () =
+        this.optimizeAtBit 0
 
 let compile (program:Instruction[]):Op[] =
     let compileInstruction (mask:FuzzyMask) (instruction:Instruction) : Op*FuzzyMask = 

@@ -23,7 +23,10 @@ module day14_fs.FuzzyMemory
         member this.intersectsWith (mem:MemArea) = FuzzyAddress.intersects mem.Address address
         member this.modifyDistinct (newDist:bool) = MemArea(address,distinct && newDist,value)
         member this.isShadowedBy (mem:MemArea) = fullyContains mem.Address address
-        member this.shadows (mem:MemArea) = fullyContains address mem.Address
+        member this.shadows (mem:MemArea) = fullyContains address mem.Address        
+        member this.expandAtBit (bit:int) =
+            address.expandAtBit bit
+            |> Seq.map (fun a -> MemArea(a,false,value)) |> Seq.toArray 
     
     let splitByMultipleMemoryAreas (mem:MemArea[]) (addr:FuzzyAddress) : FuzzyAddress[] =  
         let rec split (mems:List<MemArea>) (addr:FuzzyAddress): seq<FuzzyAddress> =
@@ -125,8 +128,9 @@ module day14_fs.FuzzyMemory
             FMemory (impure,newDistinct)
             
         member this.expandAtBit (bit:int) : FMemory =
-            let expand (m:MemArea) = m.Address.expandAtBit bit 
-            let expanded = mem |> Seq.map (expand) |> Seq.toArray
-            self 
+            let expand (m:MemArea) : MemArea[] = m.expandAtBit bit 
+            let expanded : MemArea[][]= mem |> Seq.map (expand) |> Seq.toArray
+            let newMem : MemArea[] = expanded |> Seq.concat |> Seq.toArray
+            FMemory(newMem,distinctMem)
 
               
