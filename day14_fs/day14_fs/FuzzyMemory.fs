@@ -132,5 +132,3 @@ module day14_fs.FuzzyMemory
             let expanded : MemArea[][]= mem |> Seq.map (expand) |> Seq.toArray
             let newMem : MemArea[] = expanded |> Seq.concat |> Seq.toArray
             FMemory(newMem,distinctMem)
-
-              

@@ -22,6 +22,9 @@ module day14_fs.FuzzyAddress
                 [|FuzzyAddress(alt0);FuzzyAddress(alt1)|]
             else
                 [|self|]
+        member this.spanSize () : uint64 =
+            let xbits = addr |> Seq.filter (fun c -> 'X' = c) |> Seq.length
+            pown 2UL xbits 
 
     type FuzzyMask (mask: String) as self =
         override this.ToString () = sprintf "#%s" mask
