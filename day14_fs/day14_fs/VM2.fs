@@ -61,3 +61,15 @@ let execute (source: Instruction[]) : VM =
     printfn "VM = %A" naiveVM
     let optimized = vm.optimize ()
     optimized 
+
+let sumMemory (vm:VM) : uint64 =
+    let mem = vm.Memory.DistinctMem
+    let sumOfArea (m:MemArea) =
+        let size = m.Address.spanSize ()
+        let value = m.Value
+        let areaTotal = m.Address.spanSize () * m.Value 
+        printfn "$ %A ^%d = %d -> %d" m.Address size value areaTotal
+        areaTotal
+    let sum = mem |> Seq.map sumOfArea |> Seq.sum
+    printfn "SUM: %d" sum 
+    sum 

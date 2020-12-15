@@ -8,12 +8,14 @@ open day14_fs.FuzzyAddress
 let task2 (program:Instruction[]) =
     let vm = VM2.execute program 
     // let answer = vm.memory |> Map.toSeq |> Seq.map snd |> Seq.sum
-    printfn "RESULT: %A = %A" vm 42L  
+    let answer = VM2.sumMemory vm
+    printfn "Answer 2: %A" answer  
+//    printfn "RESULT: %A = %A" vm 42L  
   
 let task1 (program:Instruction[]) =
     let vm = VM1.execute program 
     let answer = vm.memory |> Map.toSeq |> Seq.map snd |> Seq.sum
-    printfn "RESULT: %A = %A" vm answer  
+    printfn "RESULT: %A = %A" vm answer
 
 let addPath (fileName: String) : String =
     sprintf "/Users/xeno/projects/aoc2020/day14_fs/%s" fileName 
