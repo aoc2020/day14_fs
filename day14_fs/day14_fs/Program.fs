@@ -3,6 +3,7 @@
 open System
 open day14_fs 
 open day14_fs.Instructions
+open day14_fs.FuzzyAddress
 
 let task2 (program:Instruction[]) =
     let vm = VM2.execute program 
@@ -28,6 +29,12 @@ let main argv =
     let program = unsafeLoad "input.txt"
     let program2 = unsafeLoad "input2.txt"
     let program3 = unsafeLoad "input3.txt"
+
+    task2 program3
     
-    task2 program
+//    let addr1 = FuzzyAddress("XXX1111")
+//    let addr2 = FuzzyAddress("XXXX1X1")
+//    let ints = splitIntersecting addr1 addr2
+//    printfn "ints=%A" ints 
     0 // return an integer exit code
+   
