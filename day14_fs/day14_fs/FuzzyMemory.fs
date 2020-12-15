@@ -21,7 +21,7 @@ module day14_fs.FuzzyMemory
     let splitByMultipleMemoryAreas (mem:MemArea[]) (addr:FuzzyAddress) : FuzzyAddress[] =  
         let rec split (mems:List<MemArea>) (addr:FuzzyAddress): seq<FuzzyAddress> =
             match mems with
-                | [] -> Seq.empty
+                | [] -> [|addr|] |> Array.toSeq 
                 | m :: moreMems ->
                     let splitUp : FuzzyAddress[] = splitIntersecting m.Address addr
                     let furtherSplitUp : seq<seq<FuzzyAddress>> = splitUp |> Seq.map (split moreMems)
@@ -30,7 +30,20 @@ module day14_fs.FuzzyMemory
             [|addr|]
         else 
             let memList = mem |> List.ofSeq
-            split memList addr |> Seq.toArray              
+            split memList addr |> Seq.toArray
+            
+    let splitShallowByMultipleAddresses (mem:MemArea[]) (addr:FuzzyAddress) : FuzzyAddress[] =
+        let rec split (mems:List<MemArea>) (addr:FuzzyAddress): FuzzyAddress[] =
+            match mems with
+                | [] -> [|addr|] 
+                | m :: moreMems ->
+                    let splitUp : FuzzyAddress[] = splitIntersecting m.Address addr                    
+                    if splitUp.Length > 1 then
+                        splitUp
+                    else
+                        split moreMems addr
+        let memList = mem |> List.ofSeq
+        split memList addr |> Seq.toArray        
     
     type FMemory (mem: MemArea[]) as self =
         override this.ToString () = sprintf "FMemory(%A)" mem
@@ -71,22 +84,17 @@ module day14_fs.FuzzyMemory
             mem |> Seq.map split |> Seq.concat |> Seq.toArray |> (FMemory)
             
         member this.splitByMemory (addr:FuzzyAddress) : FuzzyAddress[] =
-            splitByMultipleMemoryAreas mem addr
+            splitShallowByMultipleAddresses mem addr
                 
         member this.add (op:Op) : FMemory =
+            printfn "Adding instruction"
             match op with
             | Noop -> self
             | FuzzyStore(addr,value) ->
                 let memStep1 = this.removeShadowedBy addr
                 let memStep2 = memStep1.splitMemoryBy addr
-                let addrList = memStep2.splitByMemory addr
+                let addrList = memStep1.splitByMemory addr
                 let areas = addrList |> Seq.map (fun a -> MemArea(a,false,value)) |> Seq.toArray
-                memStep2.addUnchecked areas 
-                
-//                printfn "SPLIT: %A" memStep2 
-//                let memAndSafety = memStep2.checkAndUpdateSafety addr
-//                let memStep3 = fst memAndSafety
-//                let isSafe = snd memAndSafety 
-//                let thisArea = MemArea (addr, isSafe, value)
-//                let memStep4 = memStep3.addUnchecked thisArea 
-//                memStep4
+                let area = MemArea(addr,false,value)
+                memStep1.addUnchecked areas
+        

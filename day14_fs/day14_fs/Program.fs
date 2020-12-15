@@ -30,7 +30,7 @@ let main argv =
     let program2 = unsafeLoad "input2.txt"
     let program3 = unsafeLoad "input3.txt"
 
-    task2 program3
+    task2 program
     
 //    let addr1 = FuzzyAddress("XXX1111")
 //    let addr2 = FuzzyAddress("XXXX1X1")
