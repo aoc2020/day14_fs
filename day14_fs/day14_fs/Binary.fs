@@ -54,4 +54,4 @@ let padTo (length: int) (bin:String) : String =
         sprintf "%s%s" prefix bin
         
 let toPaddedBinary (value:uint64):String =
-    value |> toBinary |> padTo NUM_LENGTH
+    value |> toBinary |> padTo (NUM_LENGTH |> int)

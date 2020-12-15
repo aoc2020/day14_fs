@@ -15,9 +15,7 @@ let fromBinary (value:String):int64 =
     let bits = value.ToCharArray() |> Seq.map charToInt |> Seq.toArray 
     let z = bits |> Seq.fold (fun acc v -> (acc * 2L) + v) 0L
     z
-  
 
-    
 type VM (memory:FMemory) as self =
     override this.ToString () = sprintf "VM(%A)" memory
     new() = VM (FMemory ())
@@ -25,8 +23,11 @@ type VM (memory:FMemory) as self =
     member this.exec (op:Op) : VM =
         match op with
         | Noop -> self
-        | FuzzyStore _ -> VM(memory.add op) 
-        
+        | FuzzyStore _ -> VM(memory.add op)
+    member this.optimize () =
+        let step1 = memory.removeShadowed ()
+        let step2 = step1.checkConflicts ()
+        VM (step2)       
 
 let compile (program:Instruction[]):Op[] =
     let compileInstruction (mask:FuzzyMask) (instruction:Instruction) : Op*FuzzyMask = 
@@ -41,8 +42,9 @@ let compile (program:Instruction[]):Op[] =
 let execute (source: Instruction[]) : VM =
     let emptyVM = VM ()
     let program = compile source
-    let vm = program |> Seq.fold (fun (vm:VM) (op:Op) -> vm.exec op) emptyVM
-//    printfn "Compiled: %A" program
-    printfn "VM = %A" vm 
-//    program |> Seq.fold (fun (vm:VM) -> vm.exec) vm
-    vm 
+    let naiveVM = program |> Seq.fold (fun (vm:VM) (op:Op) -> vm.exec op) emptyVM
+    let vm = naiveVM
+    printfn "Compiled: %A" program
+    printfn "VM = %A" naiveVM
+    let optimized = vm.optimize ()
+    optimized 
